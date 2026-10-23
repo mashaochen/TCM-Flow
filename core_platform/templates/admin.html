@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台 · TCM-Flow</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo"><span class="mark">⚛</span><span>TCM-Flow <small>管理后台</small></span></div>
+    <div class="nav">
+      <a href="{{ url_for('index') }}">返回首页</a>
+      <button onclick="logout()">退出</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <section class="hero">
+    <h1>管理后台</h1>
+    <p>管理员专属：生成邀请码（可设 7天/1月/1年/永久有效期）、查看用户与全流程任务、数据包管理。</p>
+  </section>
+
+  <!-- 统计 -->
+  <div class="admin-grid" id="stats"></div>
+
+  <!-- 邀请码 -->
+  <div class="card">
+    <h2>🎟 邀请码管理</h2>
+    <p class="desc">生成邀请码并分发给需要使用的用户。每个邀请码只能注册一次。</p>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <label class="fl" style="margin:0;">数量</label>
+      <input type="number" id="invite-count" value="5" min="1" max="50" style="width:80px;">
+      <label class="fl" style="margin:0;">有效期</label>
+      <select id="invite-validity" style="width:130px;">
+        <option value="">永久有效</option>
+        <option value="7">7 天</option>
+        <option value="30">1 个月</option>
+        <option value="365">1 年</option>
+      </select>
+      <label class="fl" style="margin:0;">备注</label>
+      <input type="text" id="invite-note" placeholder="例如：给某同学" style="width:180px;">
+      <button class="btn btn-primary" id="btn-gen">生成邀请码</button>
+    </div>
+    <div class="notice" id="gen-notice"></div>
+    <div id="gen-result" style="margin-top:10px;"></div>
+
+    <h2 style="font-size:15px;margin-top:22px;">全部邀请码</h2>
+    <div id="code-list"></div>
+  </div>
+
+  <!-- 用户 -->
+  <div class="card">
+    <h2>👥 用户列表</h2>
+    <div id="user-list"></div>
+  </div>
+
+  <!-- 数据包管理 -->
+  <div class="card">
+    <h2>📦 数据包管理（按日期 / 用户归档）</h2>
+    <p class="desc">浏览全部全流程计算数据包，按日期与用户分组，可下载文字报告与各阶段输出文件私下分发给用户。</p>
+    <div id="package-list"></div>
+  </div>
+
+  <!-- 任务 -->
+  <div class="card">
+    <h2>🧪 全流程任务</h2>
+    <div id="job-list"></div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - {{ platform_title }}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #1a3a2a 0%, #2d5a3f 50%, #1a3a2a 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+    }
+    .login-container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 48px 40px;
+      width: 420px;
+      max-width: 90vw;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo .mark {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 12px;
+    }
+    .logo h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1a3a2a;
+      margin-bottom: 6px;
+    }
+    .logo p {
+      font-size: 13px;
+      color: #888;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 8px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .form-group input:focus {
+      border-color: #3a7d5c;
+    }
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #3a7d5c, #2d5a3f);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 8px;
+    }
+    .btn-login:hover {
+      opacity: 0.92;
+    }
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .error-msg {
+      background: #fef0f0;
+      color: #d93025;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .tab-switch {
+      display: flex;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #eee;
+    }
+    .tab-switch .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 14px;
+      color: #888;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab-switch .tab.active {
+      color: #3a7d5c;
+      border-bottom-color: #3a7d5c;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <span class="mark">🌿</span>
+      <h1>{{ platform_title }}</h1>
+      <p>{{ platform_subtitle }}</p>
+    </div>
+
+    <div class="tab-switch">
+      <div class="tab active" data-tab="login" onclick="switchTab('login')">登录</div>
+      <div class="tab" data-tab="register" onclick="switchTab('register')">注册</div>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" id="username" placeholder="请输入用户名" required>
+      </div>
+      <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" placeholder="请输入密码" required>
+      </div>
+      <button type="submit" class="btn-login" id="login-btn">登 录</button>
+    </form>
+
+    <form id="register-form" onsubmit="handleRegister(event)" style="display:none;">
+      <div class="form-group">
+        <label for="reg-username">用户名</label>
+        <input type="text" id="reg-username" placeholder="请输入用户名" required>
+      </div>
+      <div class="form-group">
+        <label for="reg-password">密码</label>
+        <input type="password" id="reg-password" placeholder="请输入密码（至少6位）" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label for="reg-password2">确认密码</label>
+        <input type="password" id="reg-password2" placeholder="请再次输入密码" required minlength="6">
+      </div>
+      <button type="submit" class="btn-login" id="register-btn">注 册</button>
+    </form>
+
+    <div class="footer">
+      基于 TCM-Flow 计算引擎驱动
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('.tab[data-tab="' + tab + '"]').classList.add('active');
+      document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+      document.getElementById('error-msg').style.display = 'none';
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('login-btn');
+      btn.disabled = true;
+      btn.textContent = '登录中...';
+
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = '/';
+        } else {
+          showError(data.error || '登录失败');
+          btn.disabled = false;
+          btn.textContent = '登 录';
+        }
+      })
+      .catch(() => {
+        showError('网络错误，请稍后重试');
+        btn.disabled = false;
+        btn.textContent = '登 录';
+      });
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const password2 = document.getElementById('reg-password2').value;
+
+      if (password !== password2) {
+        showError('两次输入的密码不一致');
+        return;
+      }
+
+      const btn = document.getElementById('register-btn');
+      btn.disabled = true;
+      btn.textContent = '注册中...';
+
+      fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // 注册成功，自动登录
+          window.location.href = '/';
+        } else {
+          showError(data.error || '注册失败');
+          btn.disabled = false;
+          btn.textContent = '注 册';
+        }
+      })
+      .catch(() => {
+        showError('网络错误，请稍后重试');
+        btn.disabled = false;
+        btn.textContent = '注 册';
+      });
+    }
+
+    // 回车提交
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const activeTab = document.querySelector('.tab.active').dataset.tab;
+        if (activeTab === 'login') {
+          handleLogin(e);
+        } else {
+          handleRegister(e);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

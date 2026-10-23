@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 · TCM-Flow 全流程分子计算平台</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo"><span class="mark">⚛</span><span>TCM-Flow <small>全流程分子计算平台</small></span></div>
+    <div class="nav"><a href="{{ url_for('index') }}">返回首页</a></div>
+  </div>
+</header>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <h1 id="auth-title">登录</h1>
+    <p class="sub">欢迎使用 TCM-Flow。本平台为邀请制，新用户需使用管理员发放的邀请码注册。</p>
+
+    <div id="login-form">
+      <div class="field">
+        <label class="fl">用户名</label>
+        <input type="text" id="login-username" placeholder="用户名">
+      </div>
+      <div class="field">
+        <label class="fl">密码</label>
+        <input type="password" id="login-password" placeholder="密码">
+      </div>
+      <div class="notice" id="login-notice"></div>
+      <button class="btn btn-primary btn-lg" id="btn-login">登 录</button>
+      <div class="switch">还没有账号？<a href="#" id="to-register">使用邀请码注册 →</a></div>
+    </div>
+
+    <div id="register-form" style="display:none;">
+      <div class="field">
+        <label class="fl">邀请码</label>
+        <input type="text" id="reg-invite" class="mono" placeholder="管理员发放的邀请码" maxlength="16">
+      </div>
+      <div class="field">
+        <label class="fl">用户名</label>
+        <input type="text" id="reg-username" placeholder="3-20 位字母/数字/下划线">
+      </div>
+      <div class="field">
+        <label class="fl">密码</label>
+        <input type="password" id="reg-password" placeholder="至少 6 位">
+      </div>
+      <div class="field">
+        <label class="fl">确认密码</label>
+        <input type="password" id="reg-password2" placeholder="再次输入密码">
+      </div>
+      <div class="notice" id="reg-notice"></div>
+      <button class="btn btn-blue btn-lg" id="btn-register">注 册</button>
+      <div class="switch">已有账号？<a href="#" id="to-login">返回登录 →</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  function notice(id, msg, type) { const el = $(id); el.className = "notice " + (type||"error"); el.textContent = msg; }
+  function clear(id) { $(id).className = "notice"; }
+
+  $("#to-register").addEventListener("click", (e) => {
+    e.preventDefault();
+    $("#login-form").style.display = "none";
+    $("#register-form").style.display = "block";
+    $("#auth-title").textContent = "注册（邀请制）";
+    clear("#login-notice");
+  });
+  $("#to-login").addEventListener("click", (e) => {
+    e.preventDefault();
+    $("#register-form").style.display = "none";
+    $("#login-form").style.display = "block";
+    $("#auth-title").textContent = "登录";
+    clear("#reg-notice");
+  });
+
+  $("#btn-login").addEventListener("click", async () => {
+    const username = $("#login-username").value.trim();
+    const password = $("#login-password").value;
+    if (!username || !password) { notice("#login-notice", "请输入用户名和密码"); return; }
+    const r = await fetch("/api/auth/login", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    const d = await r.json();
+    if (d.success) { location.href = d.role === "admin" ? "/admin" : "/"; }
+    else notice("#login-notice", d.error);
+  });
+
+  $("#btn-register").addEventListener("click", async () => {
+    const invite = $("#reg-invite").value.trim();
+    const username = $("#reg-username").value.trim();
+    const password = $("#reg-password").value;
+    const password2 = $("#reg-password2").value;
+    if (!invite) { notice("#reg-notice", "请输入邀请码"); return; }
+    if (!username) { notice("#reg-notice", "请输入用户名"); return; }
+    if (password.length < 6) { notice("#reg-notice", "密码至少 6 位"); return; }
+    if (password !== password2) { notice("#reg-notice", "两次密码不一致"); return; }
+    const r = await fetch("/api/auth/register", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password, invite_code: invite }),
+    });
+    const d = await r.json();
+    if (d.success) {
+      notice("#reg-notice", "注册成功，请登录", "ok");
+      setTimeout(() => { $("#to-login").click(); }, 800);
+    } else notice("#reg-notice", d.error);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# ===== 核心依赖 =====
+flask>=2.0
+requests>=2.25
+
+# ===== 计算化学 =====
+rdkit>=2021.09
+meeko>=0.4.0
+openmm>=7.7
+pdbfixer>=1.8
+
+# ===== 可选依赖 =====
+# 轨迹分析加速（不安装也能跑，自动降级为纯NumPy）
+# mdtraj>=1.9
+
+# 本地 LLM 报告（需要 Ollama 服务）
+# ollama>=0.1
+
+# ===== 说明 =====
+# 1. Vina 和 xtb 需要单独下载二进制文件
+#    - Vina: https://vina.scripps.edu/
+#    - xtb: https://github.com/grimme-lab/xtb
+# 2. RDKit 推荐使用 conda 安装：
+#    conda install -c conda-forge rdkit
+# 3. OpenMM 推荐使用 conda 安装：
+#    conda install -c conda-forge openmm pdbfixer

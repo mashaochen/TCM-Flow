@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>关于 · TCM-Flow 全流程分子计算平台</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo"><span class="mark">⚛</span><span>TCM-Flow <small>全流程分子计算平台</small></span></div>
+    <div class="nav"><a href="{{ url_for('index') }}">返回首页</a></div>
+  </div>
+</header>
+
+<div class="container">
+  <section class="hero">
+    <h1>{{ title }}</h1>
+    <p>{{ subtitle }}</p>
+  </section>
+
+  <!-- 研究者简介 -->
+  <div class="card">
+    <h2>👤 研究者简介</h2>
+    <div class="researcher" style="box-shadow:none;border:none;padding:10px 0;">
+      <div class="avatar">{{ profile.name[0] }}</div>
+      <div class="info">
+        <h3>{{ profile.name }}</h3>
+        <p><b>{{ profile.title }}</b></p>
+        <p>{{ profile.affiliation }}</p>
+        <p>{{ profile.degree }}</p>
+        <p>📧 {{ profile.email }}</p>
+        <p>{{ profile.publications }}</p>
+      </div>
+    </div>
+    <p style="margin:14px 0 0;color:#374151;">{{ profile.summary }}</p>
+  </div>
+
+  <!-- 研究方向 -->
+  <div class="card">
+    <h2>🔬 研究方向</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;">
+      {% for area in profile.research_areas %}
+      <span class="chip" style="cursor:default;">{{ area }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 平台说明 -->
+  <div class="card">
+    <h2>🧪 关于本平台</h2>
+    <p class="desc" style="margin-top:10px;">
+      TCM-Flow 是一个面向中医药活性成分靶点发现与机制研究的全流程分子计算平台。
+      用户输入小分子配体的 SMILES 与靶蛋白的 PDB 结构，平台自动完成完整的计算流水线：
+      分子对接 → xtb 半经验优化 → 优化后再对接 → 分子动力学模拟 → 性质提取 → 轨迹分析 → 汇总报告。
+    </p>
+    <p class="desc">
+      平台最终输出一份文字总结报告（对接亲和力、HOMO-LUMO 能隙、偶极矩、RMSD/Rg/RMSF 等关键指标），
+      供快速筛查与机制研究参考。所有原始输出文件（复合物 PDB、轨迹、日志等）均归档在本机，
+      用户界面仅提供文字报告，如需原始数据请联系管理员。
+    </p>
+    <h3 style="font-size:15px;margin-top:14px;">技术栈（均为开源）</h3>
+    <div class="tags" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+      <span class="tag" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;">AutoDock Vina {{ vina_version }}（Apache 2.0）</span>
+      <span class="tag" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;">xtb（GFN2-xTB）</span>
+      <span class="tag" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;">OpenMM</span>
+      <span class="tag" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;">MDTraj</span>
+      <span class="tag" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;">RDKit</span>
+      <span class="tag" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;">Flask</span>
+    </div>
+    <p class="desc" style="margin-top:12px;">
+      数据来源：蛋白结构可经 PDB ID 从 RCSB Protein Data Bank（https://www.rcsb.org）下载，或上传本地 PDB 文件。
+    </p>
+  </div>
+</div>
+
+<footer class="foot">
+  {{ profile.name }} 课题组 · {{ profile.affiliation }}
+</footer>
+</body>
+</html>

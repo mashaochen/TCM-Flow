@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCM-Flow · 全流程分子计算平台</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  .herb-list {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+  .herb-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .herb-item:last-child { border-bottom: none; }
+  .herb-item:hover { background: var(--brand-soft); }
+  .herb-item.selected { background: var(--brand-soft); border-left: 3px solid var(--brand); }
+  .herb-item .name { font-weight: 600; font-size: 14px; }
+  .herb-item .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  
+  .herb-info-box {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 12px 0;
+  }
+  .herb-name { font-size: 20px; font-weight: 700; color: #166534; }
+  .herb-meta { font-size: 13px; color: #15803d; margin-top: 4px; }
+  .herb-indications { font-size: 13px; color: #374151; margin-top: 8px; line-height: 1.6; }
+  
+  .compound-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  .compound-table th, .compound-table td {
+    padding: 7px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+  }
+  .compound-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 12.5px;
+    position: sticky;
+    top: 0;
+  }
+  .compound-table tr:hover { background: #f8fafc; }
+  .compound-table tr.selected { background: var(--brand-soft); }
+  .compound-table .no-smiles { color: var(--muted); font-size: 11px; margin-left: 4px; }
+  .compound-table .select-btn {
+    padding: 3px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+    border: 1px solid var(--brand);
+    color: var(--brand);
+    background: none;
+    cursor: pointer;
+  }
+  .compound-table .select-btn:hover { background: var(--brand); color: #fff; }
+  .compound-table .select-btn.selected { background: var(--brand); color: #fff; }
+  .compound-table .select-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--muted);
+    color: var(--muted);
+  }
+  
+  .table-scroll { max-height: 300px; overflow-y: auto; margin-top: 8px; }
+  
+  .target-chips {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+  }
+  .target-chip {
+    background: #ede9fe;
+    color: #6d28d9;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+  
+  .kegg-list { margin-top: 8px; }
+  .kegg-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .kegg-item .term { flex: 1; }
+  .kegg-item .count { color: var(--muted); font-size: 12px; margin-right: 12px; }
+  .kegg-item .pval { color: #dc2626; font-size: 12px; font-family: monospace; }
+  
+  /* 隐藏原SMILES示例chips（已由中药成分选择替代） */
+  #smiles-chips { display: none; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo"><span class="mark">🌿</span><span>TCM-Flow <small>全流程分子计算平台</small></span></div>
+    <div class="nav" id="nav">
+      <a href="{{ url_for('about') }}">关于</a>
+      <span id="nav-auth"></span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <section class="hero">
+    <h1>蛋白质 - 配体全流程分子计算</h1>
+    <p>输入配体 SMILES 与蛋白结构，平台自动完成：分子对接 → xtb 优化 → 再对接 →
+       分子动力学 → 性质提取 → 轨迹分析，最后输出一份文字总结报告。</p>
+    <div class="tags">
+      <span class="tag">AutoDock Vina {{ vina_version }}</span>
+      <span class="tag">xtb GFN2-xTB</span>
+      <span class="tag">OpenMM</span>
+      <span class="tag">MDTraj</span>
+    </div>
+  </section>
+
+  <section class="researcher">
+    <div class="avatar">{{ profile.name[0] }}</div>
+    <div class="info">
+      <h3>{{ profile.name }} <span style="font-weight:400;color:#6b7280;">· {{ profile.title }}</span></h3>
+      <p>{{ profile.affiliation }} · {{ profile.degree }}</p>
+      <p>{{ profile.summary }}</p>
+      <a href="{{ url_for('about') }}">查看完整介绍 →</a>
+    </div>
+  </section>
+
+  <div id="login-banner" class="card" style="display:none;">
+    <h2>🔒 需要登录</h2>
+    <p class="desc">本平台为邀请制。请使用管理员发放的邀请码注册并登录后使用。</p>
+    <button class="btn btn-primary" onclick="location.href='{{ url_for('login') }}'">登录 / 注册</button>
+  </div>
+
+  <div id="workspace" style="display:none;">
+    <div class="card">
+      <h2><span class="step">1</span> 选择中药与活性成分</h2>
+      <p class="desc">从常用中药中筛选活性成分，查看性味归经与网络药理学靶点预测，选定后进入分子计算。</p>
+      
+      <div class="tcm-herb-section">
+        <label class="fl">中药名称</label>
+        <input type="text" id="herb-search" placeholder="输入中药名称，如：黄芩、黄连、金银花...">
+        <div class="herb-list" id="herb-list"></div>
+      </div>
+      
+      <div class="tcm-herb-detail" id="herb-detail" style="display:none;">
+        <div class="herb-info-box">
+          <div class="herb-name" id="herb-name"></div>
+          <div class="herb-meta" id="herb-meta"></div>
+          <div class="herb-indications" id="herb-indications"></div>
+        </div>
+      </div>
+      
+      <div class="tcm-compound-section" id="compound-section" style="display:none;">
+        <label class="fl" id="compound-count-label">活性成分</label>
+        <div class="table-scroll">
+          <table class="compound-table">
+            <thead>
+              <tr>
+                <th>成分名称</th>
+                <th>OB(%)</th>
+                <th>DL</th>
+                <th>靶点数</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="compound-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="tcm-target-section" id="target-section" style="display:none;">
+        <label class="fl" id="target-count-label">潜在靶点</label>
+        <div class="target-chips" id="target-chips"></div>
+      </div>
+      
+      <div class="tcm-kegg-section" id="kegg-section" style="display:none;">
+        <label class="fl">KEGG 通路富集（Top 10）</label>
+        <div class="kegg-list" id="kegg-list"></div>
+      </div>
+      
+      <input type="hidden" id="smiles">
+      <div class="chips" id="smiles-chips"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">2</span> 蛋白结构输入（PDB）</h2>
+      <p class="desc">通过 PDB ID 下载，或上传/粘贴本地 PDB。</p>
+      <div class="tabs" id="pdb-tabs">
+        <button class="active" data-mode="pdb_id">PDB ID</button>
+        <button data-mode="upload">上传文件</button>
+        <button data-mode="paste">粘贴文本</button>
+      </div>
+      <div id="pdb-panel-pdb_id">
+        <label class="fl">蛋白 PDB ID</label>
+        <input type="text" id="pdb-id" placeholder="例如：2J0L、1STP、4LLD">
+        <div class="chips" id="pdb-chips"></div>
+      </div>
+      <div id="pdb-panel-upload" style="display:none;">
+        <label class="fl">上传 PDB 文件（.pdb）</label>
+        <input type="file" id="pdb-file" accept=".pdb,.ent,.txt">
+      </div>
+      <div id="pdb-panel-paste" style="display:none;">
+        <label class="fl">粘贴 PDB 内容</label>
+        <textarea id="pdb-text" rows="7" placeholder="ATOM ..."></textarea>
+      </div>
+      <div class="notice" id="pdb-notice"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">3</span> 对接参数（可选）</h2>
+      <p class="desc">保持默认即可，或调整穷举度等参数。</p>
+      <div class="param-grid">
+        <div class="field"><label>exhaustiveness</label><input type="number" id="p-exh" value="8" min="1" max="64"></div>
+        <div class="field"><label>num_modes</label><input type="number" id="p-modes" value="9" min="1" max="20"></div>
+        <div class="field"><label>cpu（0=自动）</label><input type="number" id="p-cpu" value="0" min="0" max="64"></div>
+        <div class="field"><label>seed</label><input type="number" id="p-seed" value="42"></div>
+      </div>
+    </div>
+
+    <div class="card" style="text-align:center;">
+      <button class="btn btn-primary btn-lg" id="btn-run">🚀 开始全流程计算</button>
+      <div class="notice" id="run-notice"></div>
+    </div>
+
+    <div class="card">
+      <h2>🔍 查询我的报告</h2>
+      <p class="desc">提交任务后系统会分配一个 5 位任务编号（如 00001）。输入编号即可查看该任务的文字报告（仅本人可查看，不提供文件下载）。</p>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="query-id" class="mono" placeholder="例如：00001" style="width:160px;">
+        <button class="btn btn-primary" id="btn-query">查询报告</button>
+      </div>
+      <div class="notice" id="query-notice"></div>
+    </div>
+
+    <div class="card result-hidden" id="progress-card">
+      <div class="progress-wrap">
+        <div class="spinner"></div>
+        <div class="msg" id="progress-msg">任务已提交，正在排队…</div>
+      </div>
+    </div>
+
+    <div class="card result-hidden" id="result-card">
+      <h2><span class="step">✓</span> 计算报告</h2>
+      <div id="result-body"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="foot">
+  {{ profile.name }} 课题组 · {{ profile.affiliation }}<br>
+  TCM-Flow 基于开源 AutoDock Vina、xtb、OpenMM、MDTraj、RDKit 构建
+</footer>
+
+<script>window.CONTACT_EMAIL = "{{ profile.email }}";</script>
+<script>
+// ============= 中医药入口 =============
+(function() {
+  const state = {
+    herb: null,
+    compounds: [],
+    selectedIdx: -1,
+    targets: []
+  };
+
+  const herbSearch = document.getElementById('herb-search');
+  const herbList = document.getElementById('herb-list');
+  const herbDetail = document.getElementById('herb-detail');
+  const compoundSection = document.getElementById('compound-section');
+  const targetSection = document.getElementById('target-section');
+  const keggSection = document.getElementById('kegg-section');
+  const smilesInput = document.getElementById('smiles');
+
+  // 防抖搜索
+  let searchTimer = null;
+  herbSearch.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = herbSearch.value.trim();
+    searchTimer = setTimeout(() => {
+      if (q.length > 0) {
+        searchHerbs(q);
+      } else {
+        herbList.innerHTML = '';
+      }
+    }, 200);
+  });
+
+  function searchHerbs(q) {
+    fetch(`/api/tcm/herbs?q=${encodeURIComponent(q)}&limit=10`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.herbs.length > 0) {
+          herbList.innerHTML = data.herbs.map(h => {
+            const meta = [];
+            if (h.nature) meta.push(h.nature);
+            if (h.flavor) meta.push(h.flavor);
+            if (h.channel) meta.push(h.channel);
+            return `
+            <div class="herb-item" data-name="${h.name}">
+              <div class="name">${h.name}${h.pinyin ? ' <span style="color:var(--muted);font-weight:400;font-size:12px;">' + h.pinyin + '</span>' : ''}</div>
+              <div class="meta">${meta.join(' · ')}${h.efficacy ? ' · ' + h.efficacy : ''}</div>
+            </div>`;
+          }).join('');
+          herbList.querySelectorAll('.herb-item').forEach(el => {
+            el.addEventListener('click', () => selectHerb(el.dataset.name, el));
+          });
+        } else {
+          herbList.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:13px;">未找到相关中药</div>';
+        }
+      });
+  }
+
+  function selectHerb(name, el) {
+    state.herb = name;
+    state.selectedIdx = -1;
+    state.targets = [];
+    smilesInput.value = '';
+
+    // 高亮选中
+    document.querySelectorAll('.herb-item').forEach(e => e.classList.remove('selected'));
+    if (el) el.classList.add('selected');
+
+    // 获取中药详情
+    fetch(`/api/tcm/herbs?q=${encodeURIComponent(name)}&limit=1`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.herbs.length > 0) {
+          const h = data.herbs[0];
+          document.getElementById('herb-name').textContent = h.name + (h.pinyin ? '  ' + h.pinyin : '');
+          const meta = [];
+          if (h.nature && h.flavor) meta.push(h.nature + h.flavor);
+          if (h.channel) meta.push(h.channel);
+          if (h.efficacy) meta.push(h.efficacy);
+          document.getElementById('herb-meta').textContent = meta.join(' · ');
+          document.getElementById('herb-indications').textContent = h.indications || '';
+          herbDetail.style.display = 'block';
+        }
+      });
+
+    // 加载成分列表
+    compoundSection.style.display = 'block';
+    document.getElementById('compound-count-label').textContent = '正在加载活性成分...';
+    document.getElementById('compound-tbody').innerHTML = '';
+    targetSection.style.display = 'none';
+    keggSection.style.display = 'none';
+
+    loadCompounds(name);
+  }
+
+  function loadCompounds(herbName) {
+    fetch(`/api/tcm/herbs/${encodeURIComponent(herbName)}/compounds`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.compounds.length > 0) {
+          state.compounds = data.compounds;
+          const hasSmiles = data.compounds.filter(c => c.smiles).length;
+          
+          document.getElementById('compound-count-label').textContent = 
+            `活性成分（共 ${data.compounds.length} 个，${hasSmiles} 个支持分子计算）`;
+          
+          const tbody = document.getElementById('compound-tbody');
+          tbody.innerHTML = data.compounds.map((c, i) => {
+            const hasSmi = !!c.smiles;
+            const displayName = c.chinese_name || c.compound_name;
+            return `
+            <tr data-idx="${i}">
+              <td>${displayName}${!hasSmi ? '<span class="no-smiles">（无结构）</span>' : ''}</td>
+              <td>${c.OB ? c.OB.toFixed(1) : '-'}</td>
+              <td>${c.DL ? c.DL.toFixed(2) : '-'}</td>
+              <td>${c.target_count || 0}</td>
+              <td><button class="select-btn" data-idx="${i}" ${!hasSmi ? 'disabled' : ''}>${hasSmi ? '选择' : '暂不支持'}</button></td>
+            </tr>`;
+          }).join('');
+          
+          // 绑定选择事件
+          tbody.querySelectorAll('.select-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const idx = parseInt(btn.dataset.idx);
+              selectCompound(idx);
+            });
+          });
+        } else {
+          document.getElementById('compound-count-label').textContent = '未找到活性成分数据';
+        }
+      });
+  }
+
+  function selectCompound(idx) {
+    const c = state.compounds[idx];
+    if (!c.smiles) return;
+
+    state.selectedIdx = idx;
+    state.targets = [];
+    smilesInput.value = c.smiles;
+
+    // 高亮选中
+    document.querySelectorAll('#compound-tbody tr').forEach(e => {
+      e.classList.remove('selected');
+      const btn = e.querySelector('.select-btn');
+      btn.classList.remove('selected');
+      if (!btn.disabled) btn.textContent = '选择';
+    });
+    const row = document.querySelector(`#compound-tbody tr[data-idx="${idx}"]`);
+    if (row) {
+      row.classList.add('selected');
+      const btn = row.querySelector('.select-btn');
+      btn.classList.add('selected');
+      btn.textContent = '已选';
+    }
+
+    // 加载靶点和通路
+    targetSection.style.display = 'block';
+    keggSection.style.display = 'block';
+    document.getElementById('target-count-label').textContent = '正在加载靶点...';
+    document.getElementById('target-chips').innerHTML = '';
+    document.getElementById('kegg-list').innerHTML = '<div style="padding:10px;text-align:center;color:var(--muted);font-size:13px;">加载中...</div>';
+
+    loadTargetsAndPathways(c);
+  }
+
+  function loadTargetsAndPathways(compound) {
+    fetch(`/api/tcm/compounds/${encodeURIComponent(compound.compound_name)}/targets?herb=${encodeURIComponent(state.herb)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.targets.length > 0) {
+          state.targets = data.targets;
+          
+          document.getElementById('target-chips').innerHTML = 
+            data.targets.slice(0, 30).map(t => `<span class="target-chip">${t}</span>`).join('');
+          document.getElementById('target-count-label').textContent = 
+            `潜在靶点（共 ${data.targets.length} 个${data.targets.length > 30 ? '，显示前30个' : ''}）`;
+          
+          // 加载KEGG富集
+          loadKeggEnrichment(data.targets);
+        } else {
+          document.getElementById('target-chips').innerHTML = 
+            '<span style="color:var(--muted);font-size:12px;">未找到该成分的靶点数据</span>';
+          document.getElementById('target-count-label').textContent = '潜在靶点';
+          document.getElementById('kegg-list').innerHTML = 
+            '<div style="padding:10px;text-align:center;color:var(--muted);font-size:13px;">无富集通路数据</div>';
+        }
+      });
+  }
+
+  function loadKeggEnrichment(targets) {
+    const genesStr = targets.slice(0, 100).join(',');
+    fetch(`/api/tcm/kegg/enrichment?genes=${encodeURIComponent(genesStr)}&top=10`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.pathways.length > 0) {
+          document.getElementById('kegg-list').innerHTML = data.pathways.map(p => `
+            <div class="kegg-item">
+              <span class="term">${p.term}</span>
+              <span class="count">${p.overlap}/${p.pathway_size}</span>
+              <span class="pval">p=${p.p_value.toExponential(2)}</span>
+            </div>
+          `).join('');
+        } else {
+          document.getElementById('kegg-list').innerHTML = 
+            '<div style="padding:10px;text-align:center;color:var(--muted);font-size:13px;">无显著富集通路</div>';
+        }
+      });
+  }
+
+  // 页面加载后默认搜索黄芩
+  window.addEventListener('load', () => {
+    herbSearch.value = '黄芩';
+    searchHerbs('黄芩');
+  });
+})();
+</script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
