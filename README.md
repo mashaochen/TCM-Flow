@@ -55,7 +55,7 @@ TCM-Flow 将**中药活性成分检索 → 半经验量子化学优化 → 分�
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/yourname/TCM-Flow.git
+git clone https://github.com/mashaochen/TCM-Flow.git
 cd TCM-Flow
 ```
 
