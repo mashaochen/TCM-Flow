@@ -147,9 +147,8 @@ python -c "import pdbfixer; print('PDBFixer OK')"
 完整数据库（约 100 MB）包含 3,819 味中药、7,284 种活性成分。
 
 **获取方式：**
-- 从论文补充材料下载
-- 或从 GitHub Release 下载
-- 下载后放入 `data/tcm.db`
+- 从 Zenodo 下载：[https://doi.org/10.5281/zenodo.23600814](https://doi.org/10.5281/zenodo.23600814)
+- 下载后解压，将 `tcm.db` 放入 `data/tcm.db`
 
 **或设置环境变量：**
 ```bash

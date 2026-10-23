@@ -113,7 +113,7 @@ python app.py
 |------|------|-------------|
 | mdtraj | 轨迹分析加速 | 自动降级为纯 NumPy 实现 |
 | Ollama + qwen2.5 模型 | AI 报告生成 | 自动降级为模板报告 |
-| 中药数据库 tcm.db | 中医药网关页面 | 网关功能不可用，核心计算不受影响 |
+| 中药数据库 tcm.db | 中医药网关页面 | 网关功能不可用，核心计算不受影响（[Zenodo 下载](https://doi.org/10.5281/zenodo.23600814)） |
 
 > **完整安装步骤见 [INSTALL.md](INSTALL.md)**
 
@@ -257,7 +257,7 @@ TCM-Flow/
 [待补充] 作者. 标题. 期刊, 年份.
 ```
 
-数据集可从论文补充材料或 Zenodo 获取。
+数据集已在 Zenodo 公开：[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23600814.svg)](https://doi.org/10.5281/zenodo.23600814)
 
 ---
 
