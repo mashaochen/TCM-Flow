@@ -1,25 +1,34 @@
-# ===== 核心依赖 =====
-flask>=2.0
-requests>=2.25
+# ============================================================
+# TCM-Flow 全流程分子计算平台 · Python 依赖
+# 版本为论文复现实测通过的版本
+# ============================================================
 
-# ===== 计算化学 =====
-rdkit>=2021.09
-meeko>=0.4.0
-openmm>=7.7
-pdbfixer>=1.8
+# ---- Web 服务 ----
+flask==3.1.3
+requests==2.34.2
 
-# ===== 可选依赖 =====
-# 轨迹分析加速（不安装也能跑，自动降级为纯NumPy）
-# mdtraj>=1.9
+# ---- 分子处理 / 对接 ----
+rdkit==2026.9.1
+meeko==0.8.0
 
-# 本地 LLM 报告（需要 Ollama 服务）
-# ollama>=0.1
+# ---- 分子动力学 / 轨迹分析 ----
+openmm==8.6.1
+pdbfixer==1.12.0
+mdtraj==1.11.2
 
-# ===== 说明 =====
-# 1. Vina 和 xtb 需要单独下载二进制文件
-#    - Vina: https://vina.scripps.edu/
-#    - xtb: https://github.com/grimme-lab/xtb
-# 2. RDKit 推荐使用 conda 安装：
-#    conda install -c conda-forge rdkit
-# 3. OpenMM 推荐使用 conda 安装：
-#    conda install -c conda-forge openmm pdbfixer
+# ---- 数值计算 ----
+numpy==2.5.3
+
+# ------------------------------------------------------------
+# 安装说明：
+#   1. rdkit / openmm / pdbfixer 推荐用 conda 安装（Windows 上 pip 可能失败）：
+#        conda install -c conda-forge rdkit openmm pdbfixer -y
+#      然后 pip 安装其余：
+#        pip install flask requests meeko mdtraj numpy
+#
+#   2. 外部二进制程序（非 pip 安装，需单独获取）：
+#      - AutoDock Vina 1.2.7 ：已内置 core_platform/bin/vina.exe
+#      - xtb 6.7.x（GFN2-xTB）：https://github.com/grimme-lab/xtb/releases
+#        解压到 core_platform/bin/xtb-6.7.1/ 或设置 XTB_EXE 环境变量
+#      - Ollama（可选，LLM 报告用）：https://ollama.com/
+# ------------------------------------------------------------
