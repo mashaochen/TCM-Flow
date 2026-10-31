@@ -1,0 +1,42 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+venv/
+.venv/
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+
+# ===== 操作系统 =====
+.DS_Store
+Thumbs.db
+
+# ===== TCM-Flow 运行产物 =====
+core_platform/data/results/
+examples/*/results/
+**/01_docking/
+**/02_xtb_opt/
+**/03_redocking/
+**/04_md/
+**/05_properties/
+**/06_analysis/
+**/07_report/
+*.dcd
+*.log
+examples/*/*.pdb
+*.db
+*.xyz
+charges
+wbo
+xtbrestart
+xtbtopo.mol
+.xtboptok
